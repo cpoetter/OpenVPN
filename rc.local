@@ -1,0 +1,14 @@
+# /etc/rc.local
+
+exec 2> /tmp/rc.local.log      # send stderr from rc.local to a log file
+exec 1>&2                      # send stdout to the same log file
+set -x                         # tell sh to display commands before execution
+
+/sbin/iptables -P FORWARD ACCEPT
+/sbin/iptables --table nat -A POSTROUTING -o tun0 -j MASQUERADE
+echo 1| tee /proc/sys/net/ipv4/ip_forward
+/usr/sbin/hostapd -B /etc/hostapd/hostapd.conf &
+sleep 15
+/sbin/ifconfig br0 192.168.3.1
+/etc/init.d/isc-dhcp-server start
+/usr/sbin/openvpn --config /home/pi/client.ovpn --daemon
